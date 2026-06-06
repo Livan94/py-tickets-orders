@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from django.db.models import Count, F
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
@@ -98,7 +100,11 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         movie = self.request.query_params.get("movie")
 
         if date:
-            queryset = queryset.filter(show_time__date=date)
+            parsed_date = datetime.strptime(date, "%Y-%m-%d").date()
+            queryset = queryset.filter(
+                show_time__gte=parsed_date,
+                show_time__lt=parsed_date + timedelta(days=1),
+            )
 
         if movie:
             queryset = queryset.filter(movie_id=movie)
