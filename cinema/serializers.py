@@ -156,7 +156,7 @@ class TicketCreateSerializer(serializers.ModelSerializer):
 
         if not (1 <= seat <= cinema_hall.seats_in_row):
             raise serializers.ValidationError(
-                {"seat": f"seat must be in range [1, {cinema_hall.seats_in_row}]"}
+                {"seat": f"seat must be in range [1, {cinema_hall.seats_in_row}]"}  # noqa: E501
             )
 
         return attrs
@@ -189,5 +189,3 @@ class OrderCreateSerializer(serializers.ModelSerializer):
                 Ticket.objects.create(order=order, **ticket_data)
 
         return order
-
-
