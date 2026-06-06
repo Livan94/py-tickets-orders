@@ -1,21 +1,27 @@
-from django.db.models import F, Count
+from django.db.models import Count, F
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
-from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
-
+from cinema.models import (
+    Actor,
+    CinemaHall,
+    Genre,
+    Movie,
+    MovieSession,
+    Order,
+)
 from cinema.serializers import (
-    GenreSerializer,
     ActorSerializer,
     CinemaHallSerializer,
-    MovieSerializer,
-    MovieSessionSerializer,
-    MovieSessionListSerializer,
+    GenreSerializer,
     MovieDetailSerializer,
-    MovieSessionDetailSerializer,
     MovieListSerializer,
-    OrderSerializer,
+    MovieSerializer,
+    MovieSessionDetailSerializer,
+    MovieSessionListSerializer,
+    MovieSessionSerializer,
     OrderCreateSerializer,
+    OrderSerializer,
 )
 
 
@@ -35,10 +41,11 @@ class CinemaHallViewSet(viewsets.ModelViewSet):
 
 
 class MovieViewSet(viewsets.ModelViewSet):
+    queryset = Movie.objects.all()
     serializer_class = MovieSerializer
 
     def get_queryset(self):
-        queryset = Movie.objects.all()
+        queryset = self.queryset
 
         title = self.request.query_params.get("title")
         genres = self.request.query_params.get("genres")
@@ -69,12 +76,11 @@ class MovieViewSet(viewsets.ModelViewSet):
 
 class MovieSessionViewSet(viewsets.ModelViewSet):
     queryset = MovieSession.objects.all()
+    serializer_class = MovieSessionSerializer
 
     def get_queryset(self):
         queryset = (
-            MovieSession.objects.all()
-            .select_related("movie", "cinema_hall")
-            .annotate(
+            self.queryset.select_related("movie", "cinema_hall").annotate(
                 tickets_available=(
                     F("cinema_hall__rows") * F("cinema_hall__seats_in_row")
                     - Count("tickets")
@@ -103,7 +109,6 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         return MovieSessionSerializer
 
 
-
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
@@ -111,9 +116,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return (
-            self.queryset
-            .filter(user=self.request.user)
-            .prefetch_related(
+            self.queryset.filter(user=self.request.user).prefetch_related(
                 "tickets__movie_session__movie",
                 "tickets__movie_session__cinema_hall",
             )
